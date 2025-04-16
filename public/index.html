@@ -14,8 +14,9 @@ test
     document.getElementById('myImage').addEventListener('click', function() {
         window.parent.postMessage({
             "msgType":"replaceImage",
-            "elementType" :"img",
+            "elementTag" :"img",
             "elementID": "myImage",
+            "filePath" : "public/index.html"
         }, '*');
     });
 </script>
