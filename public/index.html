@@ -7,15 +7,35 @@
     <meta name="Description" content="" />
 </head>
 <body>
-test
-<img id="myImage" src="test.svg" width="100px" height="100px" alt=""/>
-<a href="page2.html">跳转</a>
+ <img id="myImage" src="test.svg" width="100px" height="100px" alt=""/><br/>
+<span id="mySpanText">testSpanText</span><br/>
+<p id="myPText">test p</p>
 <script>
     document.getElementById('myImage').addEventListener('click', function() {
         window.parent.postMessage({
             "msgType":"replaceImage",
             "elementTag" :"img",
             "elementID": "myImage",
+            "filePath" : "/home/project/public/index.html"
+        }, '*');
+    });
+
+    document.getElementById('mySpanText').addEventListener('click', function() {
+        window.parent.postMessage({
+            "msgType":"replaceText",
+            "originalString":document.getElementById('mySpanText').innerText,
+            "elementTag" :"span",
+            "elementID": "mySpanText",
+            "filePath" : "/home/project/public/index.html"
+        }, '*');
+    });
+    document.getElementById('myPText').addEventListener('click', function() {
+        console.log(document.getElementById('myPText').innerText);
+        window.parent.postMessage({
+            "msgType":"replaceText",
+            "originalString":document.getElementById('myPText').innerText,
+            "elementTag" :"p",
+            "elementID": "myPText",
             "filePath" : "/home/project/public/index.html"
         }, '*');
     });
