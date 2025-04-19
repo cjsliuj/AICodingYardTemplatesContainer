@@ -1,0 +1,362 @@
+:root {
+    --primary-color: #FF7E79;
+    --background-color: #FFFFF0;
+    --card-radius: 16px;
+    --card-spacing: 12px;
+    --nav-blur: blur(10px);
+    --nav-opacity: 0.4;
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --status-bar-height: 44px;
+    --tab-bar-height: 83px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background-color: var(--background-color);
+    min-height: 100vh;
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* iOS风格状态栏 */
+.status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--status-bar-height);
+    background-color: rgba(255, 255, 255, var(--nav-opacity));
+    backdrop-filter: var(--nav-blur);
+    -webkit-backdrop-filter: var(--nav-blur);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.status-bar__time {
+    font-weight: 600;
+    color: #000;
+}
+
+.status-bar__icons {
+    margin-left: auto;
+    display: flex;
+    gap: 5px;
+}
+
+/* iOS风格导航栏 */
+.nav-bar {
+    position: fixed;
+    top: var(--status-bar-height);
+    left: 0;
+    right: 0;
+    background-color: rgba(255, 255, 255, var(--nav-opacity));
+    backdrop-filter: var(--nav-blur);
+    -webkit-backdrop-filter: var(--nav-blur);
+    z-index: 1000;
+    padding: 8px 16px;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #000;
+    font-size: 15px;
+    font-weight: 400;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary-color);
+}
+
+/* iOS风格页面容器 */
+.page-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.frame-wrapper {
+    position: relative;
+    width: 100%;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.1);
+}
+
+.page-frame {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: var(--card-radius);
+    background: white;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.frame-wrapper:hover .page-frame {
+    transform: scale(1.02);
+}
+
+/* iOS风格卡片 */
+.card {
+    background: white;
+    border-radius: var(--card-radius);
+    padding: var(--card-spacing);
+    margin-bottom: var(--card-spacing);
+    box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* iOS风格标题 */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: #000;
+    letter-spacing: -0.5px;
+}
+
+h1 { font-size: 34px; line-height: 41px; }
+h2 { font-size: 28px; line-height: 34px; }
+h3 { font-size: 22px; line-height: 28px; }
+
+/* iOS风格正文 */
+p {
+    font-weight: 400;
+    line-height: 1.5;
+    color: #666;
+    font-size: 15px;
+}
+
+/* iOS风格图片 */
+img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--card-radius);
+    object-fit: cover;
+}
+
+/* iOS风格按钮 */
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.button:hover {
+    background-color: #ff6b6b;
+    transform: scale(0.98);
+}
+
+/* iOS风格底部标签栏 */
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--tab-bar-height);
+    background-color: rgba(255, 255, 255, var(--nav-opacity));
+    backdrop-filter: var(--nav-blur);
+    -webkit-backdrop-filter: var(--nav-blur);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.tab-bar__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #666;
+    text-decoration: none;
+    font-size: 10px;
+    transition: color 0.3s ease;
+}
+
+.tab-bar__item.active {
+    color: var(--primary-color);
+}
+
+.tab-bar__icon {
+    font-size: 24px;
+}
+
+/* 瀑布流布局 */
+.masonry-grid {
+    columns: 2;
+    column-gap: var(--card-spacing);
+    padding: var(--card-spacing);
+}
+
+@media (min-width: 768px) {
+    .masonry-grid {
+        columns: 3;
+    }
+}
+
+/* 页面标题和描述 */
+.page-title {
+    text-align: center;
+    padding: 20px 0;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--primary-color);
+}
+
+.page-subtitle {
+    text-align: center;
+    margin-top: -15px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #999;
+}
+
+/* 适配iPhone 16 Pro */
+@media screen and (max-width: 430px) {
+    .page-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .page-frame {
+        height: 100vh;
+    }
+}
+
+/* 图片上传开关样式 */
+.image-upload-toggle {
+    position: fixed; /* 固定在视口 */
+    top: 70px;      /* 调整与顶部的距离 (考虑导航栏) */
+    right: 16px;     /* 调整与右侧的距离 */
+    z-index: 1000;  /* 确保在最上层 */
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    -webkit-backdrop-filter: blur(5px); /* iOS 毛玻璃效果 */
+    backdrop-filter: blur(5px);
+}
+
+/* 基本开关样式 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px; /* 调整宽度 */
+  height: 24px; /* 调整高度 */
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px; /* 调整滑块大小 */
+  width: 20px;  /* 调整滑块大小 */
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color, #007aff); /* 使用主题色或iOS蓝 */
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary-color, #007aff);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(16px); /* 调整滑动距离 */
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
+}
+
+/* 圆形滑块 */
+.slider.round {
+  border-radius: 24px; /* 使背景变圆 */
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 确保现有的 keyframes spin 规则不受影响 */ 
