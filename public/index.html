@@ -291,6 +291,14 @@
 <h4>text using h4</h4>
 <h5>text using h5</h5>
 <h6>text using h6</h6>
+<div>
+    aa
+    bb
+    <br/>
+    cc
+    <br/>
+    dd
+</div>
 <a href="page2.html">text using a</a>
 <script>
     var isEditMode = false;
@@ -2355,102 +2363,102 @@ function applyPageModifications() {
 // 使所有图片可编辑
 function makeImagesEditable() {
   console.log('[DEBUG] 使所有图片可编辑');
-  
+
   // 清除之前的事件监听器
   document.querySelectorAll('.image-editable').forEach(img => {
     img.removeEventListener('click', handleImageEditClick);
     img.classList.remove('image-editable');
   });
-  
+
   document.querySelectorAll('.bg-image-editable').forEach(el => {
     el.removeEventListener('click', handleImageEditClick);
     el.classList.remove('bg-image-editable');
     el.removeAttribute('data-bg-editable');
   });
-  
+
   document.querySelectorAll('div').forEach(div => {
     div.removeEventListener('click', handleImageEditClick);
   });
-  
+
   // 处理普通图片
   let imageCount = 0;
   document.querySelectorAll('img').forEach(img => {
     // 排除编辑器元素的图片
-    if (img.closest('#elementInspector') || 
-        img.closest('#divEditorButtons') || 
+    if (img.closest('#elementInspector') ||
+        img.closest('#divEditorButtons') ||
         img.closest('#imageUploadModal') ||
         img.closest('.editor-button')) {
       return;
     }
-    
+
     // 确保图片父元素是相对定位，以支持伪元素
     if (img.parentElement) {
       ensureRelativePosition(img.parentElement);
     }
-    
+
     // 仅添加类和事件监听器，不修改直接样式
     img.classList.add('image-editable');
     img.addEventListener('click', handleImageEditClick);
     imageCount++;
   });
-  
+
   console.log(`[DEBUG] 添加了 ${imageCount} 张可编辑图片`);
-  
+
   // 处理背景图片
   let bgImageCount = 0;
   document.querySelectorAll('*').forEach(el => {
     // 排除已处理的元素和编辑器元素
-    if (el.classList.contains('bg-image-editable') || 
-        el.id === 'elementInspector' || 
+    if (el.classList.contains('bg-image-editable') ||
+        el.id === 'elementInspector' ||
         el.id === 'divEditorButtons' ||
         el.classList.contains('element-highlight') ||
         el.classList.contains('editor-button') ||
         el.closest('#imageUploadModal')) {
       return;
     }
-    
+
     const style = window.getComputedStyle(el);
     const bgImage = style.backgroundImage;
-    
+
     if (bgImage && bgImage !== 'none' && !bgImage.includes('gradient')) {
       // 确保元素是相对定位，以支持伪元素
       ensureRelativePosition(el);
-      
+
       el.classList.add('bg-image-editable');
       el.setAttribute('data-bg-editable', 'true');
       el.addEventListener('click', handleImageEditClick);
       bgImageCount++;
     }
   });
-  
+
   console.log(`[DEBUG] 添加了 ${bgImageCount} 个可编辑背景`);
-  
+
   // 处理轮播图容器
   const carouselContainers = [];
-  
+
   // 查找可能的轮播图容器
   document.querySelectorAll('.carousel, .swiper, .slider, [id*="carousel"], [id*="slider"], [class*="carousel"], [class*="slider"]').forEach(container => {
     // 排除编辑器元素
-    if (container.closest('#elementInspector') || 
-        container.closest('#divEditorButtons') || 
+    if (container.closest('#elementInspector') ||
+        container.closest('#divEditorButtons') ||
         container.closest('#imageUploadModal') ||
         container.classList.contains('editor-button')) {
       return;
     }
-    
+
     if (container.querySelectorAll('img').length > 1) {
       carouselContainers.push(container);
     }
   });
-  
+
   console.log(`[DEBUG] 找到 ${carouselContainers.length} 个轮播图`);
-  
+
   // 标记轮播图容器
   carouselContainers.forEach(container => {
     container.classList.add('carousel-container-editable');
     container.setAttribute('data-carousel-editable', 'true');
     container.addEventListener('click', handleImageEditClick);
-    
+
     // 添加提示标记
     if (!container.querySelector('[data-carousel-hint]')) {
       const hint = document.createElement('div');
@@ -2465,22 +2473,22 @@ function makeImagesEditable() {
       hint.style.fontSize = '12px';
       hint.style.zIndex = '1000';
       hint.textContent = '轮播图 - 点击编辑';
-      
+
       // 如果容器是相对定位，直接添加提示；否则，先设置相对定位
       const containerStyle = window.getComputedStyle(container);
       if (containerStyle.position === 'static') {
         container.style.position = 'relative';
       }
-      
+
       container.appendChild(hint);
     }
   });
-  
+
   // 处理包含图片的div容器 - 添加可点击编辑功能
   let divWithImagesCount = 0;
   document.querySelectorAll('div').forEach(div => {
     // 排除已处理的元素和编辑器元素
-    if (div.id === 'elementInspector' || 
+    if (div.id === 'elementInspector' ||
         div.id === 'divEditorButtons' ||
         div.classList.contains('element-highlight') ||
         div.classList.contains('editor-button') ||
@@ -2488,26 +2496,26 @@ function makeImagesEditable() {
         div.closest('#imageUploadModal')) {
       return;
     }
-    
+
     // 检查div是否包含图片
     const images = div.querySelectorAll('img');
     if (images.length === 0) {
       return; // 没有图片的div直接跳过
     }
-    
+
     // 过滤出非编辑器的图片
     const validImages = Array.from(images).filter(img => {
-      return !(img.closest('#elementInspector') || 
-              img.closest('#divEditorButtons') || 
+      return !(img.closest('#elementInspector') ||
+              img.closest('#divEditorButtons') ||
               img.closest('#imageUploadModal') ||
               img.closest('.editor-button'));
     });
-    
+
     if (validImages.length > 0) {
       // 加上特殊标记类，方便调试
       div.classList.add('div-image-container');
       div.setAttribute('data-images-count', validImages.length);
-      
+
       // 直接使用简单的点击处理函数
       div.addEventListener('click', function(e) {
         console.log('[DEBUG] div点击事件触发', this.tagName, '包含图片数:', validImages.length);
@@ -2516,13 +2524,13 @@ function makeImagesEditable() {
         // 调用处理函数
         handleImageEditClick.call(this, e);
       });
-      
+
       divWithImagesCount++;
     }
   });
-  
+
   console.log(`[DEBUG] 添加了 ${divWithImagesCount} 个包含图片的div`);
-  
+
   // 处理包含多个图片的链接容器
   document.querySelectorAll('a').forEach(link => {
     const images = link.querySelectorAll('img');
@@ -2530,20 +2538,20 @@ function makeImagesEditable() {
       link.setAttribute('data-image-editable-container', 'true');
     }
   });
-  
+
   console.log('[DEBUG] 图片编辑已启用');
 }
 
 // 保存编辑的图片到本地存储
 function saveEditedImage(originalSrc, file) {
   const v = window.editorVars;
-  
+
   try {
     // 读取文件为DataURL
     const reader = new FileReader();
     reader.onload = function(e) {
       const dataUrl = e.target.result;
-      
+
       // 根据编辑类型保存到不同的存储对象
       if (v.currentEditingType === 'single') {
         v.editedImages[originalSrc] = dataUrl;
@@ -2555,13 +2563,13 @@ function saveEditedImage(originalSrc, file) {
         v.editedCarouselImages[originalSrc] = dataUrl;
         localStorage.setItem('editedCarouselImages', JSON.stringify(v.editedCarouselImages));
       }
-      
+
       // 更新页面修改时间
       savePageState();
-      
+
       console.log('[DEBUG] 图片编辑已保存:', originalSrc);
     };
-    
+
     reader.readAsDataURL(file);
   } catch (error) {
     console.error('[ERROR] 保存编辑的图片失败:', error);
@@ -2572,7 +2580,7 @@ function saveEditedImage(originalSrc, file) {
 function applyImageEdits() {
   const v = window.editorVars;
   console.log('[DEBUG] 应用保存的图片编辑');
-  
+
   try {
     // 应用普通图片编辑
     for (const originalSrc in v.editedImages) {
@@ -2580,26 +2588,26 @@ function applyImageEdits() {
         img.src = v.editedImages[originalSrc];
       });
     }
-    
+
     // 应用背景图片编辑
     for (const originalSrc in v.editedBackgroundImages) {
       document.querySelectorAll('*').forEach(el => {
         const style = window.getComputedStyle(el);
         const bgImage = style.backgroundImage;
-        
+
         if (bgImage && bgImage.includes(originalSrc)) {
           el.style.backgroundImage = `url('${v.editedBackgroundImages[originalSrc]}')`;
         }
       });
     }
-    
+
     // 应用轮播图/容器图片编辑
     for (const originalSrc in v.editedCarouselImages) {
       document.querySelectorAll(`img[src="${originalSrc}"]`).forEach(img => {
         img.src = v.editedCarouselImages[originalSrc];
       });
     }
-    
+
     console.log('[DEBUG] 图片编辑已应用');
   } catch (error) {
     console.error('[ERROR] 应用图片编辑失败:', error);
@@ -2647,17 +2655,17 @@ function removeEditModeFromDivs() {
 // 处理图片编辑模式下的鼠标移动事件
 function handleImageEditMouseMove(e) {
   const v = window.editorVars;
-  
+
   if (!v.isImageEditMode) {
     return;
   }
-  
+
   const element = document.elementFromPoint(e.clientX, e.clientY);
-  
+
   // 忽略编辑器自身的元素
   if (element && (
-      element.id === 'elementInspector' || 
-      element.id === 'divEditorButtons' || 
+      element.id === 'elementInspector' ||
+      element.id === 'divEditorButtons' ||
       element.classList.contains('element-highlight') ||
       element.classList.contains('editor-button') ||
       element === document.getElementById('editDuplicateBtn') ||
@@ -2666,26 +2674,26 @@ function handleImageEditMouseMove(e) {
     hideHoverHighlight();
     return;
   }
-  
+
   // 查找最近的div元素
   let targetDiv = element;
   while (targetDiv && targetDiv.tagName.toLowerCase() !== 'div' && targetDiv !== document.body) {
     targetDiv = targetDiv.parentElement;
   }
-  
+
   if (!targetDiv || targetDiv === document.body) {
     hideHoverHighlight();
     return;
   }
-  
+
   // 检查div是否包含图片（排除编辑器元素的图片）
   const images = targetDiv.querySelectorAll('img');
   let containsImages = false;
-  
+
   for (const img of images) {
     // 检查图片是否属于编辑器元素
-    const isEditorElement = img.closest('#elementInspector') || 
-                           img.closest('#divEditorButtons') || 
+    const isEditorElement = img.closest('#elementInspector') ||
+                           img.closest('#divEditorButtons') ||
                            img.closest('#imageUploadModal') ||
                            img.closest('.editor-button');
     if (!isEditorElement) {
@@ -2693,21 +2701,21 @@ function handleImageEditMouseMove(e) {
       break;
     }
   }
-  
+
   if (!containsImages) {
     hideHoverHighlight();
     return;
   }
-  
+
   // 更新当前悬停元素
   v.hoverElement = targetDiv;
-  
+
   // 特殊标记，标明此div可编辑图片
   if (!targetDiv.classList.contains('div-hover-highlight')) {
     targetDiv.classList.add('div-hover-highlight');
     targetDiv.style.cursor = 'pointer';
   }
-  
+
   // 显示高亮
   highlightHoverElement(v.hoverElement);
 }
