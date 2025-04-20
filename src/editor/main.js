@@ -1,46 +1,50 @@
-// 全局共享变量
+const MODE_TYPE_NORMAL = 0;
+const MODE_TYPE_EDIT = 1;
+const MODE_TYPE_INSPECTING = 2;
 window.editorVars = {
-    isInspecting: false,
-    isEditMode: false,
+    modeType: MODE_TYPE_NORMAL,
     selectedElement: null,
     hoverElement: null,
     hoveredHighlight: null,
     highlightElement: null,
-    buttons: null // 存储编辑器按钮引用
 };
 
 // 初始化编辑器
 document.addEventListener('DOMContentLoaded', function () {
     console.log('初始化编辑器...');
-    initEditor();
 
-    var isEditMode = false;
+    initEditor();
 
     window.addEventListener('message', (event) => {
         const data = event.data
         const msgType = data["msgType"]
-        if (msgType != "toggleEditMode") {
+        if (msgType !== "switchMode") {
             return
         }
-        isEditMode = data["isEditModeOn"]
-        console.log("iframe isEditModeOn", isEditMode)
+        const dstModeType = data["dstModeType"]
+        if (dstModeType === MODE_TYPE_NORMAL) {
+            swithcToNormalMode();
+        } else if (dstModeType === MODE_TYPE_EDIT) {
+            switchToEditMode();
+        } else if (dstModeType === MODE_TYPE_INSPECTING) {
+            switchToInspectorMode()
+        }
     });
 
     document.addEventListener('click', function (event) {
-        if (!isEditMode) {
-            return;
+        if (currentModeType() === MODE_TYPE_INSPECTING) {
+            event.preventDefault();
+            event.stopPropagation();
         }
-        event.preventDefault();
         const target = event.target;
         window.parent.postMessage({
             "msgType": "edit",
             "prototype": Object.prototype.toString.call(event.target),
-            "outerHTML": target.outerHTML,
+            "outerHTML": target .outerHTML,
             "tagName": target.tagName,
             "textContent": target.textContent,
             "baseURI": target.baseURI
         }, '*');
-        console.log(target);
     });
 
     window.parent.postMessage({
@@ -48,46 +52,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }, '*');
 });
 
-
-
-// 添加编辑器按钮
-function addEditorButtons() {
-    // 区域编辑按钮
-    const toggleEditButton = document.createElement('button');
-    toggleEditButton.innerText = '启用区域编辑模式';
-    toggleEditButton.className = 'editor-button';
-    toggleEditButton.style.right = '180px';
-    document.body.appendChild(toggleEditButton);
-
-    // 元素检查按钮
-    const toggleInspectButton = document.createElement('button');
-    toggleInspectButton.innerText = '启用元素检查';
-    toggleInspectButton.className = 'editor-button';
-    toggleInspectButton.style.right = '30px';
-    document.body.appendChild(toggleInspectButton);
-    return {
-        editBtn: toggleEditButton,
-        inspectBtn: toggleInspectButton
-    };
-}
-
 // 初始化编辑器功能
 function initEditor() {
     const v = window.editorVars;
     // 获取DOM元素
-    const inspector = document.getElementById('elementInspector');
     const editorButtons = document.getElementById('divEditorButtons');
     const duplicateBtn = document.getElementById('editDuplicateBtn');
     const removeBtn = document.getElementById('editRemoveBtn');
 
-    // 添加编辑器按钮
-    v.buttons = addEditorButtons();
-
     // 初始化高亮元素
     ensureHighlightElementsCreated();
-
-    // 绑定按钮事件
-    bindButtonEvents();
 
     // 复制按钮点击事件
     duplicateBtn.addEventListener('click', function (e) {
@@ -115,11 +89,47 @@ function initEditor() {
     });
 }
 
+export function currentModeType() {
+    return window.editorVars.modeType;
+}
+
+export function swithcToNormalMode() {
+    if (window.editorVars.modeType === MODE_TYPE_NORMAL) {
+        return
+    }
+    const v = window.editorVars;
+    if (v.modeType === MODE_TYPE_INSPECTING) {
+        hideInspector();
+        hideHighlight();
+        document.removeEventListener('mousemove', handleInspectorMouseMove);
+    } else if (v.modeType === MODE_TYPE_EDIT) {
+        removeEditModeFromDivs();
+        document.removeEventListener('mousemove', handleEditMouseMove);
+    }
+    v.modeType = MODE_TYPE_NORMAL;
+}
+
+export function switchToEditMode() {
+    if (currentModeType() === MODE_TYPE_EDIT) {
+        return
+    }
+    swithcToNormalMode()
+    applyEditModeToDivs();
+    document.addEventListener('mousemove', handleEditMouseMove);
+    window.editorVars.modeType = MODE_TYPE_EDIT;
+}
+export function switchToInspectorMode(e){
+    if (currentModeType() === MODE_TYPE_INSPECTING) {
+        return
+    }
+    swithcToNormalMode()
+    document.addEventListener('mousemove', handleInspectorMouseMove);
+    window.editorVars.modeType = MODE_TYPE_INSPECTING;
+}
 // 确保创建和显示高亮元素
 function ensureHighlightElementsCreated() {
     console.log('[DEBUG] 确保高亮元素已创建');
     const v = window.editorVars;
-
     // 检查检查高亮元素
     if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
         console.log('[DEBUG] 创建检查高亮元素');
@@ -166,148 +176,6 @@ function ensureHighlightElementsCreated() {
         highlightElement: !!v.highlightElement,
         hoveredHighlight: !!v.hoveredHighlight
     });
-}
-
-// 绑定按钮事件处理
-function bindButtonEvents() {
-    const v = window.editorVars;
-    const buttons = v.buttons;
-
-    if (!buttons) {
-        console.error('[ERROR] 按钮未定义，无法绑定事件');
-        return;
-    }
-
-    console.log('[DEBUG] 开始绑定按钮事件');
-
-    // 切换元素检查模式
-    buttons.inspectBtn.addEventListener('click', function (e) {
-        console.log('[DEBUG] 元素检查按钮被点击', e.type);
-        console.log('[DEBUG] 点击前状态:', {
-            isInspecting: v.isInspecting,
-
-            isEditMode: v.isEditMode
-        });
-
-        // 清除可能的旧事件处理程序
-        document.removeEventListener('mousemove', handleInspectorMouseMove);
-        document.removeEventListener('mousemove', handleMouseMove);
-        console.log('[DEBUG] 旧事件处理程序已清除');
-
-        if (v.isEditMode) {
-            console.log('[DEBUG] 关闭区域编辑模式');
-            v.isEditMode = false;
-            removeEditModeFromDivs();
-            buttons.editBtn.innerText = '启用区域编辑模式';
-            buttons.editBtn.style.backgroundColor = '#4285f4';
-        }
-
-        // 切换检查模式状态
-        v.isInspecting = !v.isInspecting;
-        console.log('[DEBUG] 检查模式切换为:', v.isInspecting);
-
-        if (v.isInspecting) {
-            console.log('[DEBUG] 启用元素检查');
-            this.innerText = '禁用元素检查';
-            this.style.backgroundColor = '#ea4335';
-
-            try {
-                // 绑定鼠标移动事件处理程序
-                console.log('[DEBUG] 尝试绑定检查器鼠标移动事件');
-                document.addEventListener('mousemove', handleInspectorMouseMove);
-                console.log('[DEBUG] 检查器鼠标移动事件绑定成功');
-            } catch (error) {
-                console.error('[ERROR] 绑定检查器鼠标移动事件失败:', error);
-            }
-        } else {
-            console.log('[DEBUG] 禁用元素检查');
-            this.innerText = '启用元素检查';
-            this.style.backgroundColor = '#4285f4';
-
-            try {
-                // 隐藏检查器和高亮
-                console.log('[DEBUG] 尝试隐藏检查器和高亮');
-                hideInspector();
-                hideHighlight();
-                console.log('[DEBUG] 检查器和高亮隐藏成功');
-
-                // 解绑鼠标移动事件处理程序
-                document.removeEventListener('mousemove', handleInspectorMouseMove);
-                console.log('[DEBUG] 检查器鼠标移动事件解绑成功');
-            } catch (error) {
-                console.error('[ERROR] 隐藏检查器或解绑事件失败:', error);
-            }
-        }
-        console.log('[DEBUG] 元素检查模式切换完成');
-    });
-
-    // 切换区域编辑模式
-    buttons.editBtn.addEventListener('click', function (e) {
-        console.log('[DEBUG] 区域编辑按钮被点击', e.type);
-        console.log('[DEBUG] 点击前状态:', {
-            isEditMode: v.isEditMode,
-            isInspecting: v.isInspecting,
-        });
-
-        // 清除可能的旧事件处理程序
-        document.removeEventListener('mousemove', handleInspectorMouseMove);
-        document.removeEventListener('mousemove', handleMouseMove);
-        console.log('[DEBUG] 旧事件处理程序已清除');
-
-        // 如果其他模式已开启，先关闭
-        if (v.isInspecting) {
-            console.log('[DEBUG] 关闭元素检查模式');
-            v.isInspecting = false;
-            hideInspector();
-            hideHighlight();
-            buttons.inspectBtn.innerText = '启用元素检查';
-            buttons.inspectBtn.style.backgroundColor = '#4285f4';
-        }
-
-        // 切换区域编辑状态
-        v.isEditMode = !v.isEditMode;
-        console.log('[DEBUG] 区域编辑模式切换为:', v.isEditMode);
-
-        if (v.isEditMode) {
-            console.log('[DEBUG] 启用区域编辑模式');
-            this.innerText = '禁用区域编辑模式';
-            this.style.backgroundColor = '#ea4335';
-
-            try {
-                // 应用区域编辑模式
-                console.log('[DEBUG] 尝试应用区域编辑模式');
-                applyEditModeToDivs();
-                console.log('[DEBUG] 区域编辑模式应用成功');
-
-                // 绑定鼠标移动事件处理程序
-                console.log('[DEBUG] 尝试绑定鼠标移动事件');
-                document.addEventListener('mousemove', handleMouseMove);
-                console.log('[DEBUG] 鼠标移动事件绑定成功');
-            } catch (error) {
-                console.error('[ERROR] 应用区域编辑模式失败:', error);
-            }
-        } else {
-            console.log('[DEBUG] 禁用区域编辑模式');
-            this.innerText = '启用区域编辑模式';
-            this.style.backgroundColor = '#4285f4';
-
-            try {
-                // 移除区域编辑模式
-                console.log('[DEBUG] 尝试移除区域编辑模式');
-                removeEditModeFromDivs();
-                console.log('[DEBUG] 区域编辑模式移除成功');
-
-                // 解绑鼠标移动事件处理程序
-                document.removeEventListener('mousemove', handleMouseMove);
-                console.log('[DEBUG] 鼠标移动事件解绑成功');
-            } catch (error) {
-                console.error('[ERROR] 移除区域编辑模式失败:', error);
-            }
-        }
-        console.log('[DEBUG] 区域编辑模式切换完成');
-    });
-
-    console.log('[DEBUG] 按钮事件绑定完成');
 }
 
 // 显示检查器提示
@@ -476,10 +344,10 @@ function hideInspector() {
 }
 
 // 鼠标移动事件处理
-function handleMouseMove(e) {
+function handleEditMouseMove(e) {
     console.log('[DEBUG] 处理鼠标移动事件');
 
-    if (!window.editorVars.isEditMode) {
+    if (!window.editorVars.modeType === MODE_TYPE_EDIT) {
         console.log('[DEBUG] 编辑模式未启用，不处理鼠标移动');
         return;
     }
@@ -615,7 +483,7 @@ function handleElementClick(e) {
     const v = window.editorVars;
     console.log('[DEBUG] 处理元素点击事件');
 
-    if (!v.isEditMode) {
+    if (window.editorVars.modeType !== MODE_TYPE_EDIT) {
         console.log('[DEBUG] 编辑模式未启用，不处理点击');
         return;
     }
