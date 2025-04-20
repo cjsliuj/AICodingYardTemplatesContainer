@@ -11,7 +11,7 @@ window.editorVars = {
 
 // 初始化编辑器
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('初始化编辑器...');
+
 
     initEditor();
 
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window.parent.postMessage({
             "msgType": "edit",
             "prototype": Object.prototype.toString.call(event.target),
-            "outerHTML": target .outerHTML,
+            "outerHTML": target.outerHTML,
             "tagName": target.tagName,
             "textContent": target.textContent,
             "baseURI": target.baseURI
@@ -55,25 +55,23 @@ document.addEventListener('DOMContentLoaded', function () {
 // 初始化编辑器功能
 function initEditor() {
     const v = window.editorVars;
-    // 获取DOM元素
-    const editorButtons = document.getElementById('divEditorButtons');
-    const duplicateBtn = document.getElementById('editDuplicateBtn');
-    const removeBtn = document.getElementById('editRemoveBtn');
+    addEditorHintElements();
 
     // 初始化高亮元素
     ensureHighlightElementsCreated();
 
     // 复制按钮点击事件
+    const duplicateBtn = document.getElementById('editDuplicateBtn');
     duplicateBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-
         if (v.selectedElement) {
             duplicateElement(v.selectedElement);
         }
     });
 
     // 删除按钮点击事件
+    const removeBtn = document.getElementById('editRemoveBtn');
     removeBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -84,9 +82,24 @@ function initEditor() {
     });
 
     // 阻止编辑按钮冒泡
+    const editorButtons = document.getElementById('divEditorButtons');
     editorButtons.addEventListener('click', function (e) {
         e.stopPropagation();
     });
+}
+
+function addEditorHintElements() {
+    const divElement = document.createElement("div");
+    divElement.id = "elementInspector";
+    document.body.appendChild(divElement);
+
+    const divEditBtnsCtn = document.createElement("div");
+    divEditBtnsCtn.id = "divEditorButtons";
+    divEditBtnsCtn.innerHTML = `
+    <button id="editDuplicateBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #34a853; color: white; border: none;">+</button>
+    <button id="editRemoveBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #ea4335; color: white; border: none;">-</button>
+    `;
+    document.body.appendChild(divEditBtnsCtn);
 }
 
 export function currentModeType() {
@@ -118,7 +131,8 @@ export function switchToEditMode() {
     document.addEventListener('mousemove', handleEditMouseMove);
     window.editorVars.modeType = MODE_TYPE_EDIT;
 }
-export function switchToInspectorMode(e){
+
+export function switchToInspectorMode() {
     if (currentModeType() === MODE_TYPE_INSPECTING) {
         return
     }
@@ -126,13 +140,14 @@ export function switchToInspectorMode(e){
     document.addEventListener('mousemove', handleInspectorMouseMove);
     window.editorVars.modeType = MODE_TYPE_INSPECTING;
 }
+
 // 确保创建和显示高亮元素
 function ensureHighlightElementsCreated() {
-    console.log('[DEBUG] 确保高亮元素已创建');
+
     const v = window.editorVars;
     // 检查检查高亮元素
     if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
-        console.log('[DEBUG] 创建检查高亮元素');
+
         const highlight = document.createElement('div');
         highlight.className = 'element-highlight';
         highlight.setAttribute('data-highlight-type', 'inspect');
@@ -145,15 +160,15 @@ function ensureHighlightElementsCreated() {
         highlight.style.display = 'none';
         document.body.appendChild(highlight);
         v.highlightElement = highlight;
-        console.log('[DEBUG] 检查高亮元素已创建');
+
     } else {
-        console.log('[DEBUG] 检查高亮元素已存在');
+
         v.highlightElement = document.querySelector('.element-highlight[data-highlight-type="inspect"]');
     }
 
     // 检查悬停高亮元素
     if (!document.querySelector('.element-highlight[data-highlight-type="hover"]')) {
-        console.log('[DEBUG] 创建悬停高亮元素');
+
         const hover = document.createElement('div');
         hover.className = 'element-highlight';
         hover.setAttribute('data-highlight-type', 'hover');
@@ -166,9 +181,9 @@ function ensureHighlightElementsCreated() {
         hover.style.display = 'none';
         document.body.appendChild(hover);
         v.hoveredHighlight = hover;
-        console.log('[DEBUG] 悬停高亮元素已创建');
+
     } else {
-        console.log('[DEBUG] 悬停高亮元素已存在');
+
         v.hoveredHighlight = document.querySelector('.element-highlight[data-highlight-type="hover"]');
     }
 
@@ -181,10 +196,10 @@ function ensureHighlightElementsCreated() {
 // 显示检查器提示
 function showInspector(x, y, element) {
     const v = window.editorVars;
-    console.log('[DEBUG] 显示检查器:', {x, y, element: element ? element.tagName : 'null'});
+
 
     if (!element) {
-        console.log('[DEBUG] 无元素可检查');
+
         return;
     }
 
@@ -205,7 +220,6 @@ function showInspector(x, y, element) {
         containingDiv = element; // 如果找不到包含的div，则显示元素本身
     }
 
-    console.log('[DEBUG] 找到包含元素:', containingDiv ? containingDiv.tagName : 'null');
 
     // 获取元素名称
     let info = '';
@@ -224,7 +238,6 @@ function showInspector(x, y, element) {
         }
     }
 
-    console.log('[DEBUG] 元素信息:', info);
 
     inspector.innerHTML = `<div><strong>${info}</strong></div>`;
     inspector.style.display = 'block';
@@ -247,9 +260,9 @@ function showInspector(x, y, element) {
 
     try {
         // 高亮显示div元素
-        console.log('[DEBUG] 尝试高亮显示元素');
+
         highlightTargetElement(containingDiv);
-        console.log('[DEBUG] 元素高亮成功');
+
     } catch (error) {
         console.error('[ERROR] 元素高亮失败:', error);
     }
@@ -258,20 +271,20 @@ function showInspector(x, y, element) {
 // 高亮显示元素
 function highlightTargetElement(element) {
     const v = window.editorVars;
-    console.log('[DEBUG] 高亮显示元素:', element ? element.tagName : 'null');
+
 
     if (!element) {
-        console.log('[DEBUG] 无元素可高亮');
+
         return;
     }
 
     if (!v.highlightElement) {
-        console.log('[DEBUG] 高亮元素不存在，尝试创建');
+
         ensureHighlightElementsCreated();
     }
 
     const highlight = v.highlightElement;
-    console.log('[DEBUG] 高亮元素状态:', !!highlight);
+
 
     if (!highlight) {
         console.error('[ERROR] 高亮元素创建失败');
@@ -295,25 +308,25 @@ function highlightTargetElement(element) {
 
 // 处理鼠标移动事件 - 元素检查模式
 function handleInspectorMouseMove(e) {
-    console.log('[DEBUG] 处理检查器鼠标移动:', {x: e.clientX, y: e.clientY});
+
     const x = e.clientX;
     const y = e.clientY;
     const element = document.elementFromPoint(x, y);
-    console.log('[DEBUG] 鼠标下元素:', element ? element.tagName : 'null');
+
 
     // 忽略编辑器自身的元素
     if (element && (
         element.id === 'elementInspector' ||
         element.classList.contains('element-highlight') ||
         element.classList.contains('editor-button'))) {
-        console.log('[DEBUG] 忽略编辑器自身元素');
+
         return;
     }
 
     try {
-        console.log('[DEBUG] 尝试显示检查器');
+
         showInspector(x, y, element);
-        console.log('[DEBUG] 检查器显示成功');
+
     } catch (error) {
         console.error('[ERROR] 显示检查器失败:', error);
     }
@@ -321,39 +334,39 @@ function handleInspectorMouseMove(e) {
 
 // 隐藏高亮
 function hideHighlight() {
-    console.log('[DEBUG] 隐藏高亮元素');
+
     if (window.editorVars.highlightElement) {
         window.editorVars.highlightElement.style.display = 'none';
-        console.log('[DEBUG] 高亮元素已隐藏');
+
     } else {
-        console.log('[DEBUG] 无高亮元素可隐藏');
+
     }
 }
 
 // 隐藏检查器提示
 function hideInspector() {
-    console.log('[DEBUG] 隐藏检查器');
+
     const inspector = document.getElementById('elementInspector');
     if (inspector) {
         inspector.style.display = 'none';
-        console.log('[DEBUG] 检查器已隐藏');
+
     } else {
-        console.log('[DEBUG] 无检查器可隐藏');
+
     }
     hideHighlight();
 }
 
 // 鼠标移动事件处理
 function handleEditMouseMove(e) {
-    console.log('[DEBUG] 处理鼠标移动事件');
+
 
     if (!window.editorVars.modeType === MODE_TYPE_EDIT) {
-        console.log('[DEBUG] 编辑模式未启用，不处理鼠标移动');
+
         return;
     }
 
     const element = document.elementFromPoint(e.clientX, e.clientY);
-    console.log('[DEBUG] 鼠标下元素:', element ? element.tagName : 'null');
+
 
     // 忽略我们的UI元素
     if (element && (
@@ -363,7 +376,7 @@ function handleEditMouseMove(e) {
         element.classList.contains('editor-button') ||
         element === document.getElementById('editDuplicateBtn') ||
         element === document.getElementById('editRemoveBtn'))) {
-        console.log('[DEBUG] 忽略UI元素');
+
         hideHoverHighlight();
         return;
     }
@@ -374,23 +387,22 @@ function handleEditMouseMove(e) {
         targetDiv = targetDiv.parentElement;
     }
 
-    console.log('[DEBUG] 目标DIV:', targetDiv ? targetDiv.tagName : 'null');
 
     if (!targetDiv || targetDiv === document.body || targetDiv === window.editorVars.selectedElement) {
-        console.log('[DEBUG] 无效目标或已选中，隐藏高亮');
+
         hideHoverHighlight();
         return;
     }
 
     // 更新当前悬停元素
     window.editorVars.hoverElement = targetDiv;
-    console.log('[DEBUG] 更新悬停元素:', window.editorVars.hoverElement.tagName);
+
 
     try {
         // 显示高亮
-        console.log('[DEBUG] 尝试高亮悬停元素');
+
         highlightHoverElement(window.editorVars.hoverElement);
-        console.log('[DEBUG] 悬停元素高亮成功');
+
     } catch (error) {
         console.error('[ERROR] 悬停元素高亮失败:', error);
     }
@@ -398,32 +410,32 @@ function handleEditMouseMove(e) {
 
 // 隐藏悬停高亮
 function hideHoverHighlight() {
-    console.log('[DEBUG] 隐藏悬停高亮');
+
     if (window.editorVars.hoveredHighlight) {
         window.editorVars.hoveredHighlight.style.display = 'none';
-        console.log('[DEBUG] 悬停高亮已隐藏');
+
     } else {
-        console.log('[DEBUG] 无悬停高亮可隐藏');
+
     }
 }
 
 // 高亮显示悬停元素
 function highlightHoverElement(element) {
     const v = window.editorVars;
-    console.log('[DEBUG] 高亮显示悬停元素:', element ? element.tagName : 'null');
+
 
     if (!element) {
-        console.log('[DEBUG] 无元素可高亮');
+
         return;
     }
 
     if (!v.hoveredHighlight) {
-        console.log('[DEBUG] 悬停高亮元素不存在，尝试创建');
+
         ensureHighlightElementsCreated();
     }
 
     const hover = v.hoveredHighlight;
-    console.log('[DEBUG] 悬停高亮元素状态:', !!hover);
+
 
     if (!hover) {
         console.error('[ERROR] 悬停高亮元素创建失败');
@@ -447,10 +459,10 @@ function highlightHoverElement(element) {
 
 // 应用编辑模式到所有div
 function applyEditModeToDivs() {
-    console.log('[DEBUG] 应用编辑模式到所有DIV');
+
     const v = window.editorVars;
     const divs = document.querySelectorAll('div');
-    console.log('[DEBUG] 找到DIV元素数量:', divs.length);
+
 
     let appliedCount = 0;
     divs.forEach(div => {
@@ -481,10 +493,10 @@ function applyEditModeToDivs() {
 // 处理元素点击事件
 function handleElementClick(e) {
     const v = window.editorVars;
-    console.log('[DEBUG] 处理元素点击事件');
+
 
     if (window.editorVars.modeType !== MODE_TYPE_EDIT) {
-        console.log('[DEBUG] 编辑模式未启用，不处理点击');
+
         return;
     }
 
@@ -502,13 +514,13 @@ function handleElementClick(e) {
         e.target.classList.contains('editor-button') ||
         e.target === document.getElementById('editDuplicateBtn') ||
         e.target === document.getElementById('editRemoveBtn')) {
-        console.log('[DEBUG] 点击的是编辑器元素，忽略');
+
         return;
     }
 
     // 获取点击的div
     const clickedElement = e.currentTarget;
-    console.log('[DEBUG] 点击的元素:', clickedElement.tagName);
+
 
     // 如果已经有选中的元素，移除选中状态
     if (v.selectedElement) {
@@ -521,7 +533,7 @@ function handleElementClick(e) {
             editorButtons.style.display = 'none';
         }
 
-        console.log('[DEBUG] 移除先前选中元素的样式');
+
     }
 
     // 更新选中的元素
@@ -529,7 +541,7 @@ function handleElementClick(e) {
         // 如果再次点击同一个元素，取消选择
         v.selectedElement = null;
         hideEditorButtons();
-        console.log('[DEBUG] 取消选择元素');
+
         return;
     }
 
@@ -543,12 +555,12 @@ function handleElementClick(e) {
     // 显示编辑按钮
     showEditorButtons(v.selectedElement);
 
-    console.log('[DEBUG] 选中新元素，应用样式和显示按钮');
+
 }
 
 // 显示编辑按钮
 function showEditorButtons(element) {
-    console.log('[DEBUG] 显示编辑按钮');
+
     if (!element) return;
 
     const buttons = document.getElementById('divEditorButtons');
@@ -566,22 +578,22 @@ function showEditorButtons(element) {
     buttons.style.top = (rect.bottom + window.scrollY + 5) + 'px'; // 元素底部下方5px
     buttons.style.left = (rect.right + window.scrollX - 90) + 'px'; // 元素右侧偏左90px
 
-    console.log('[DEBUG] 编辑按钮已显示');
+
 }
 
 // 隐藏编辑按钮
 function hideEditorButtons() {
-    console.log('[DEBUG] 隐藏编辑按钮');
+
     const buttons = document.getElementById('divEditorButtons');
     if (buttons) {
         buttons.style.display = 'none';
-        console.log('[DEBUG] 编辑按钮已隐藏');
+
     }
 }
 
 // 复制元素
 function duplicateElement(element) {
-    console.log('[DEBUG] 复制元素');
+
     if (!element) return;
 
     try {
@@ -596,7 +608,7 @@ function duplicateElement(element) {
         // 插入副本到原元素之后
         if (element.parentNode) {
             element.parentNode.insertBefore(clone, element.nextSibling);
-            console.log('[DEBUG] 元素已成功复制');
+
 
         }
     } catch (error) {
@@ -606,7 +618,7 @@ function duplicateElement(element) {
 
 // 移除元素
 function removeElement(element) {
-    console.log('[DEBUG] 移除元素');
+
     if (!element) return;
 
     try {
@@ -616,7 +628,7 @@ function removeElement(element) {
         // 移除元素（不再需要确认）
         if (element.parentNode) {
             element.parentNode.removeChild(element);
-            console.log('[DEBUG] 元素已成功移除');
+
 
             // 重置选中的元素
             window.editorVars.selectedElement = null;
@@ -628,7 +640,7 @@ function removeElement(element) {
 
 // 移除区域编辑模式
 function removeEditModeFromDivs() {
-    console.log('[DEBUG] 移除所有DIV的编辑模式');
+
 
     // 清除选中样式和事件监听器
     document.querySelectorAll('div').forEach(div => {
@@ -661,5 +673,5 @@ function removeEditModeFromDivs() {
     hideHighlight();
     hideHoverHighlight();
 
-    console.log('[DEBUG] 区域编辑模式已移除');
+
 }

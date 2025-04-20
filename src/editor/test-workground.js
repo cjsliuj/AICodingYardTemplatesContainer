@@ -11,7 +11,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
-        btn.innerText = '启用区域编辑模式';
+        btn.innerText = 'div edit';
         btn.className = 'editor-button';
         btn.style.right = '180px';
         btn.onclick = function (e) {
@@ -23,7 +23,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
-        btn.innerText = '启用元素检查';
+        btn.innerText = 'inspector';
         btn.className = 'editor-button';
         btn.style.right = '30px';
         btn.onclick = function (e) {
@@ -35,7 +35,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
-        btn.innerText = 'Normal';
+        btn.innerText = 'normal';
         btn.className = 'editor-button';
         btn.style.right = '330px';
         btn.onclick = function (e) {
