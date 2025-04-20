@@ -1,20 +1,21 @@
 const MODE_TYPE_NORMAL = 0;
 const MODE_TYPE_EDIT = 1;
 const MODE_TYPE_INSPECTING = 2;
+const MODE_TYPE_TEXT_EDITTING = 3;
 window.editorVars = {
     modeType: MODE_TYPE_NORMAL,
+    // MODE_TYPE_TEXT_EDITTING only
+    textEdittingTargetElement:null,
     selectedElement: null,
     hoverElement: null,
-    hoveredHighlight: null,
-    highlightElement: null,
+    editHoveredHighlightElement: null,
+    inspectHoveredHighlightElement: null,
+    saveBtn: null
 };
 
 // 初始化编辑器
 document.addEventListener('DOMContentLoaded', function () {
-
-
     initEditor();
-
     window.addEventListener('message', (event) => {
         const data = event.data
         const msgType = data["msgType"]
@@ -32,19 +33,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('click', function (event) {
-        if (currentModeType() === MODE_TYPE_INSPECTING) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        const target = event.target;
-        window.parent.postMessage({
-            "msgType": "edit",
-            "prototype": Object.prototype.toString.call(event.target),
-            "outerHTML": target.outerHTML,
-            "tagName": target.tagName,
-            "textContent": target.textContent,
-            "baseURI": target.baseURI
-        }, '*');
+        handleClickOnDocument(event);
+
     });
 
     window.parent.postMessage({
@@ -55,11 +45,21 @@ document.addEventListener('DOMContentLoaded', function () {
 // 初始化编辑器功能
 function initEditor() {
     const v = window.editorVars;
-    addEditorHintElements();
+    initialEditorElements();
+}
 
-    // 初始化高亮元素
-    ensureHighlightElementsCreated();
+function initialEditorElements() {
+    const divElement = document.createElement("div");
+    divElement.id = "elementInspector";
+    document.body.appendChild(divElement);
 
+    const divEditBtnsCtn = document.createElement("div");
+    divEditBtnsCtn.id = "divEditorButtons";
+    divEditBtnsCtn.innerHTML = `
+    <button id="editDuplicateBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #34a853; color: white; border: none;">+</button>
+    <button id="editRemoveBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #ea4335; color: white; border: none;">-</button>
+    `;
+    document.body.appendChild(divEditBtnsCtn);
     // 复制按钮点击事件
     const duplicateBtn = document.getElementById('editDuplicateBtn');
     duplicateBtn.addEventListener('click', function (e) {
@@ -86,21 +86,86 @@ function initEditor() {
     editorButtons.addEventListener('click', function (e) {
         e.stopPropagation();
     });
+
+    const v = window.editorVars;
+    // 检查检查高亮元素
+    if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
+        const highlight = document.createElement('div');
+        highlight.className = 'element-highlight';
+        highlight.setAttribute('data-highlight-type', 'inspect');
+        highlight.style.position = 'absolute';
+        highlight.style.zIndex = '9999';
+        highlight.style.pointerEvents = 'none';
+        highlight.style.border = '2px solid #ea4335';
+        highlight.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
+        highlight.style.boxSizing = 'border-box';
+        highlight.style.display = 'none';
+        document.body.appendChild(highlight);
+    }
+    v.inspectHoveredHighlightElement = document.querySelector('.element-highlight[data-highlight-type="inspect"]');
+
+    // 检查悬停高亮元素
+    if (!document.querySelector('.element-highlight[data-highlight-type="hover"]')) {
+        const hover = document.createElement('div');
+        hover.className = 'element-highlight';
+        hover.setAttribute('data-highlight-type', 'hover');
+        hover.style.position = 'absolute';
+        hover.style.zIndex = '9998';
+        hover.style.pointerEvents = 'none';
+        hover.style.backgroundColor = 'rgba(66, 133, 244, 0.2)';
+        hover.style.border = '2px solid #4285f4';
+        hover.style.boxSizing = 'border-box';
+        hover.style.display = 'none';
+        document.body.appendChild(hover);
+    }
+    v.editHoveredHighlightElement = document.querySelector('.element-highlight[data-highlight-type="hover"]');
+
+    // 保存按钮
+    const saveCtn = document.createElement('div');
+    saveCtn.id = 'editor-savebtn-ctn';
+    const saveBtn = document.createElement('button');
+    saveBtn.id = 'editor-savebtn'
+    saveBtn.className = 'float-btn';
+    saveBtn.innerHTML = '🚀'; // 使用emoji作为按钮图标
+    saveBtn.addEventListener('click', (e) => {
+        handleClickOnSave(e);
+    });
+    saveCtn.appendChild(saveBtn);
+    document.body.appendChild(saveCtn);
+    window.editorVars.saveBtn = saveBtn;
+}
+function handleClickOnSave(event) {
+    swithcToNormalMode()
+    console.log(document.body.innerHTML)
+}
+function handleClickOnDocument(event) {
+    if (currentModeType() === MODE_TYPE_INSPECTING) {
+        event.preventDefault();
+        event.stopPropagation();
+        const target = event.target;
+        const editableTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'li', 'td', 'th', 'button', 'a'];
+
+        if (editableTags.includes(target.tagName.toLowerCase()) && !target.hasAttribute('contentEditable')) {
+            window.editorVars.modeType = MODE_TYPE_TEXT_EDITTING;
+            window.editorVars.textEdittingTargetElement = target;
+            target.contentEditable = true;
+            target.focus();
+            target.addEventListener('blur', (e) => {
+                target.removeAttribute('contentEditable');
+            });
+        }
+    }
+
+    // window.parent.postMessage({
+    //     "msgType": "edit",
+    //     "prototype": Object.prototype.toString.call(event.target),
+    //     "outerHTML": target.outerHTML,
+    //     "tagName": target.tagName,
+    //     "textContent": target.textContent,
+    //     "baseURI": target.baseURI
+    // }, '*');
 }
 
-function addEditorHintElements() {
-    const divElement = document.createElement("div");
-    divElement.id = "elementInspector";
-    document.body.appendChild(divElement);
-
-    const divEditBtnsCtn = document.createElement("div");
-    divEditBtnsCtn.id = "divEditorButtons";
-    divEditBtnsCtn.innerHTML = `
-    <button id="editDuplicateBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #34a853; color: white; border: none;">+</button>
-    <button id="editRemoveBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #ea4335; color: white; border: none;">-</button>
-    `;
-    document.body.appendChild(divEditBtnsCtn);
-}
 
 export function currentModeType() {
     return window.editorVars.modeType;
@@ -113,12 +178,16 @@ export function swithcToNormalMode() {
     const v = window.editorVars;
     if (v.modeType === MODE_TYPE_INSPECTING) {
         hideInspector();
-        hideHighlight();
+        hideInspectorHighlight();
         document.removeEventListener('mousemove', handleInspectorMouseMove);
     } else if (v.modeType === MODE_TYPE_EDIT) {
         removeEditModeFromDivs();
         document.removeEventListener('mousemove', handleEditMouseMove);
+    } else if (v.modeType === MODE_TYPE_TEXT_EDITTING) {
+        window.editorVars.textEdittingTargetElement.blur();
+        window.editorVars.textEdittingTargetElement = null;
     }
+    v.saveBtn.style.visibility = 'hidden';
     v.modeType = MODE_TYPE_NORMAL;
 }
 
@@ -129,6 +198,7 @@ export function switchToEditMode() {
     swithcToNormalMode()
     applyEditModeToDivs();
     document.addEventListener('mousemove', handleEditMouseMove);
+    window.editorVars.saveBtn.style.visibility = 'visible';
     window.editorVars.modeType = MODE_TYPE_EDIT;
 }
 
@@ -137,73 +207,18 @@ export function switchToInspectorMode() {
         return
     }
     swithcToNormalMode()
+
+    window.editorVars.saveBtn.style.visibility = 'visible';
     document.addEventListener('mousemove', handleInspectorMouseMove);
     window.editorVars.modeType = MODE_TYPE_INSPECTING;
-}
-
-// 确保创建和显示高亮元素
-function ensureHighlightElementsCreated() {
-
-    const v = window.editorVars;
-    // 检查检查高亮元素
-    if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
-
-        const highlight = document.createElement('div');
-        highlight.className = 'element-highlight';
-        highlight.setAttribute('data-highlight-type', 'inspect');
-        highlight.style.position = 'absolute';
-        highlight.style.zIndex = '9999';
-        highlight.style.pointerEvents = 'none';
-        highlight.style.border = '2px solid #ea4335';
-        highlight.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
-        highlight.style.boxSizing = 'border-box';
-        highlight.style.display = 'none';
-        document.body.appendChild(highlight);
-        v.highlightElement = highlight;
-
-    } else {
-
-        v.highlightElement = document.querySelector('.element-highlight[data-highlight-type="inspect"]');
-    }
-
-    // 检查悬停高亮元素
-    if (!document.querySelector('.element-highlight[data-highlight-type="hover"]')) {
-
-        const hover = document.createElement('div');
-        hover.className = 'element-highlight';
-        hover.setAttribute('data-highlight-type', 'hover');
-        hover.style.position = 'absolute';
-        hover.style.zIndex = '9998';
-        hover.style.pointerEvents = 'none';
-        hover.style.backgroundColor = 'rgba(66, 133, 244, 0.2)';
-        hover.style.border = '2px solid #4285f4';
-        hover.style.boxSizing = 'border-box';
-        hover.style.display = 'none';
-        document.body.appendChild(hover);
-        v.hoveredHighlight = hover;
-
-    } else {
-
-        v.hoveredHighlight = document.querySelector('.element-highlight[data-highlight-type="hover"]');
-    }
-
-    console.log('[DEBUG] 高亮元素创建完成', {
-        highlightElement: !!v.highlightElement,
-        hoveredHighlight: !!v.hoveredHighlight
-    });
 }
 
 // 显示检查器提示
 function showInspector(x, y, element) {
     const v = window.editorVars;
-
-
     if (!element) {
-
         return;
     }
-
-    // 获取DOM元素
     const inspector = document.getElementById('elementInspector');
     if (!inspector) {
         console.error('[ERROR] 找不到检查器元素');
@@ -219,7 +234,6 @@ function showInspector(x, y, element) {
     if (!containingDiv || containingDiv === document.body) {
         containingDiv = element; // 如果找不到包含的div，则显示元素本身
     }
-
 
     // 获取元素名称
     let info = '';
@@ -258,47 +272,14 @@ function showInspector(x, y, element) {
     inspector.style.left = `${left}px`;
     inspector.style.top = `${top}px`;
 
-    try {
-        // 高亮显示div元素
-
-        highlightTargetElement(containingDiv);
-
-    } catch (error) {
-        console.error('[ERROR] 元素高亮失败:', error);
-    }
+    highlightInspectorHoverToTargetElement(containingDiv);
 }
 
 // 高亮显示元素
-function highlightTargetElement(element) {
+function highlightInspectorHoverToTargetElement(targetElement) {
     const v = window.editorVars;
-
-
-    if (!element) {
-
-        return;
-    }
-
-    if (!v.highlightElement) {
-
-        ensureHighlightElementsCreated();
-    }
-
-    const highlight = v.highlightElement;
-
-
-    if (!highlight) {
-        console.error('[ERROR] 高亮元素创建失败');
-        return;
-    }
-
-    const rect = element.getBoundingClientRect();
-    console.log('[DEBUG] 元素位置:', {
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height
-    });
-
+    const highlight = v.inspectHoveredHighlightElement;
+    const rect = targetElement.getBoundingClientRect();
     highlight.style.top = (rect.top + window.scrollY) + 'px';
     highlight.style.left = (rect.left + window.scrollX) + 'px';
     highlight.style.width = rect.width + 'px';
@@ -308,36 +289,24 @@ function highlightTargetElement(element) {
 
 // 处理鼠标移动事件 - 元素检查模式
 function handleInspectorMouseMove(e) {
-
     const x = e.clientX;
     const y = e.clientY;
     const element = document.elementFromPoint(x, y);
-
-
     // 忽略编辑器自身的元素
     if (element && (
-        element.id === 'elementInspector' ||
+        element.id === 'elementInspector' || element.id === 'editor-savebtn' ||  element.id === 'editor-savebtn-ctn' ||
         element.classList.contains('element-highlight') ||
         element.classList.contains('editor-button'))) {
-
         return;
     }
-
-    try {
-
-        showInspector(x, y, element);
-
-    } catch (error) {
-        console.error('[ERROR] 显示检查器失败:', error);
-    }
+    showInspector(x, y, element);
 }
 
 // 隐藏高亮
-function hideHighlight() {
+function hideInspectorHighlight() {
 
-    if (window.editorVars.highlightElement) {
-        window.editorVars.highlightElement.style.display = 'none';
-
+    if (window.editorVars.inspectHoveredHighlightElement) {
+        window.editorVars.inspectHoveredHighlightElement.style.display = 'none';
     } else {
 
     }
@@ -353,21 +322,15 @@ function hideInspector() {
     } else {
 
     }
-    hideHighlight();
+    hideInspectorHighlight();
 }
 
 // 鼠标移动事件处理
 function handleEditMouseMove(e) {
-
-
     if (!window.editorVars.modeType === MODE_TYPE_EDIT) {
-
         return;
     }
-
     const element = document.elementFromPoint(e.clientX, e.clientY);
-
-
     // 忽略我们的UI元素
     if (element && (
         element.id === 'elementInspector' ||
@@ -377,7 +340,7 @@ function handleEditMouseMove(e) {
         element === document.getElementById('editDuplicateBtn') ||
         element === document.getElementById('editRemoveBtn'))) {
 
-        hideHoverHighlight();
+        hideEditHoverHighlight();
         return;
     }
 
@@ -386,70 +349,35 @@ function handleEditMouseMove(e) {
     while (targetDiv && targetDiv.tagName.toLowerCase() !== 'div' && targetDiv !== document.body) {
         targetDiv = targetDiv.parentElement;
     }
-
-
     if (!targetDiv || targetDiv === document.body || targetDiv === window.editorVars.selectedElement) {
-
-        hideHoverHighlight();
+        hideEditHoverHighlight();
         return;
     }
 
     // 更新当前悬停元素
     window.editorVars.hoverElement = targetDiv;
-
-
-    try {
-        // 显示高亮
-
-        highlightHoverElement(window.editorVars.hoverElement);
-
-    } catch (error) {
-        console.error('[ERROR] 悬停元素高亮失败:', error);
-    }
+    highlightHoverElement(window.editorVars.hoverElement);
 }
 
 // 隐藏悬停高亮
-function hideHoverHighlight() {
-
-    if (window.editorVars.hoveredHighlight) {
-        window.editorVars.hoveredHighlight.style.display = 'none';
-
-    } else {
-
-    }
+function hideEditHoverHighlight() {
+    window.editorVars.editHoveredHighlightElement.style.display = 'none';
 }
 
 // 高亮显示悬停元素
 function highlightHoverElement(element) {
     const v = window.editorVars;
-
-
     if (!element) {
-
         return;
     }
 
-    if (!v.hoveredHighlight) {
-
-        ensureHighlightElementsCreated();
-    }
-
-    const hover = v.hoveredHighlight;
-
-
+    const hover = v.editHoveredHighlightElement;
     if (!hover) {
         console.error('[ERROR] 悬停高亮元素创建失败');
         return;
     }
 
     const rect = element.getBoundingClientRect();
-    console.log('[DEBUG] 元素位置:', {
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height
-    });
-
     hover.style.top = (rect.top + window.scrollY) + 'px';
     hover.style.left = (rect.left + window.scrollX) + 'px';
     hover.style.width = rect.width + 'px';
@@ -503,9 +431,6 @@ function handleElementClick(e) {
     // 阻止默认行为和事件冒泡
     e.preventDefault();
     e.stopPropagation();
-
-    // 确保高亮元素存在
-    ensureHighlightElementsCreated();
 
     // 如果点击的是编辑器元素，不做任何处理
     if (e.target.id === 'elementInspector' ||
@@ -668,10 +593,5 @@ function removeEditModeFromDivs() {
 
     // 隐藏编辑按钮
     hideEditorButtons();
-
-    // 隐藏高亮
-    hideHighlight();
-    hideHoverHighlight();
-
-
+    hideEditHoverHighlight();
 }
