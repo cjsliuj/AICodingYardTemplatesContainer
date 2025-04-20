@@ -1,0 +1,102 @@
+
+ /* 编辑器按钮样式 */
+.editor-button {
+     position: fixed;
+     bottom: 20px;
+     z-index: 10000;
+     padding: 10px 15px;
+     background-color: #4285f4;
+     color: #fff;
+     border: none;
+     border-radius: 4px;
+     cursor: pointer;
+     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+     font-size: 14px;
+     font-weight: bold;
+     transition: background-color 0.2s;
+}
+
+/* 元素高亮样式 */
+.element-highlight {
+    position: absolute;
+    z-index: 9999;
+    pointer-events: none;
+    border: 2px solid #ea4335;
+    background-color: rgba(234, 67, 53, 0.1);
+    box-sizing: border-box;
+}
+
+/* 元素检查器样式 */
+#elementInspector {
+    position: fixed;
+    display: none;
+    z-index: 10000;
+    padding: 10px 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-size: 12px;
+    max-width: 300px;
+    word-break: break-all;
+}
+
+/* 编辑按钮容器 */
+#divEditorButtons {
+    position: absolute;
+    display: none;
+    z-index: 10000;
+    gap: 5px;
+}
+
+/* 编辑按钮样式 */
+#editDuplicateBtn {
+    padding: 0 !important;
+    background-color: #34a853 !important;
+    color: white !important;
+    font-weight: bold !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    text-align: center !important;
+    font-size: 20px !important;
+    border-radius: 4px !important;
+    margin: 0 4px !important;
+    border: none !important;
+}
+
+#editRemoveBtn {
+    padding: 0 !important;
+    background-color: #ea4335 !important;
+    color: white !important;
+    font-weight: bold !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    text-align: center !important;
+    font-size: 20px !important;
+    border-radius: 4px !important;
+    margin: 0 4px !important;
+    border: none !important;
+}
+
+/* 选中的div元素样式 */
+.div-selected {
+    outline: 2px dashed #4285f4 !important;
+    outline-offset: 1px !important;
+    position: relative;
+}
+
+#cancelImageUpload {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+#applyImageUpload {
+    background-color: #4285f4;
+    color: #fff;
+}
