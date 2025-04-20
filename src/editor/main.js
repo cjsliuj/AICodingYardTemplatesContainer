@@ -1,3 +1,14 @@
+// 全局共享变量
+window.editorVars = {
+    isInspecting: false,
+    isEditMode: false,
+    selectedElement: null,
+    hoverElement: null,
+    hoveredHighlight: null,
+    highlightElement: null,
+    buttons: null // 存储编辑器按钮引用
+};
+
 // 初始化编辑器
 document.addEventListener('DOMContentLoaded', function () {
     console.log('初始化编辑器...');
@@ -37,16 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, '*');
 });
 
-// 全局共享变量
-window.editorVars = {
-    isInspecting: false,
-    isEditMode: false,
-    selectedElement: null,
-    hoverElement: null,
-    hoveredHighlight: null,
-    highlightElement: null,
-    buttons: null // 存储编辑器按钮引用
-};
+
 
 // 添加编辑器按钮
 function addEditorButtons() {
@@ -71,13 +73,7 @@ function addEditorButtons() {
 
 // 初始化编辑器功能
 function initEditor() {
-    console.log('[DEBUG] 开始初始化编辑器');
     const v = window.editorVars;
-    console.log('[DEBUG] 编辑器变量状态:', JSON.stringify({
-        isInspecting: v.isInspecting,
-        isEditMode: v.isEditMode
-    }));
-
     // 获取DOM元素
     const inspector = document.getElementById('elementInspector');
     const editorButtons = document.getElementById('divEditorButtons');
@@ -117,8 +113,6 @@ function initEditor() {
     editorButtons.addEventListener('click', function (e) {
         e.stopPropagation();
     });
-
-    console.log('[DEBUG] 编辑器初始化完成');
 }
 
 // 确保创建和显示高亮元素
