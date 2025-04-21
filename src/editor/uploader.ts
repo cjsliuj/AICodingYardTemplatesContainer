@@ -24,7 +24,6 @@ function fileToUint8Array (file:File):Promise<Uint8Array> {
 
 export function uploadFile(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-        console.log(uploadkeys.VITE_BUCKET);
         async function run() {
             const fileBuffer = await fileToUint8Array(file!);
             const fname = Date.now().toString();
