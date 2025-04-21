@@ -1,3 +1,5 @@
+import {uploadFile} from './uploader.ts'
+
 const MODE_TYPE_NORMAL = 0;
 const MODE_TYPE_EDIT = 1;
 const MODE_TYPE_INSPECTING = 2;
@@ -10,7 +12,9 @@ window.editorVars = {
     hoverElement: null,
     editHoveredHighlightElement: null,
     inspectHoveredHighlightElement: null,
-    saveBtn: null
+    saveBtn: null,
+    fileSelectorInputElement: null,
+    replaceImgElement: null
 };
 
 // 初始化编辑器
@@ -34,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('click', function (event) {
         handleClickOnDocument(event);
-
     });
 
     window.parent.postMessage({
@@ -50,18 +53,18 @@ function initEditor() {
 
 function initialEditorElements() {
     const divElement = document.createElement("div");
-    divElement.id = "elementInspector";
+    divElement.id = "_aiyard_editor_elementInspector";
     document.body.appendChild(divElement);
 
     const divEditBtnsCtn = document.createElement("div");
-    divEditBtnsCtn.id = "divEditorButtons";
+    divEditBtnsCtn.id = "_aiyard_editor_divEditorButtons";
     divEditBtnsCtn.innerHTML = `
-    <button id="editDuplicateBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #34a853; color: white; border: none;">+</button>
-    <button id="editRemoveBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #ea4335; color: white; border: none;">-</button>
+    <button id="_aiyard_editor_editDuplicateBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #34a853; color: white; border: none;">+</button>
+    <button id="_aiyard_editor_editRemoveBtn" style="font-size: 20px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; padding: 0; background-color: #ea4335; color: white; border: none;">-</button>
     `;
     document.body.appendChild(divEditBtnsCtn);
     // 复制按钮点击事件
-    const duplicateBtn = document.getElementById('editDuplicateBtn');
+    const duplicateBtn = document.getElementById('_aiyard_editor_editDuplicateBtn');
     duplicateBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -71,7 +74,7 @@ function initialEditorElements() {
     });
 
     // 删除按钮点击事件
-    const removeBtn = document.getElementById('editRemoveBtn');
+    const removeBtn = document.getElementById('_aiyard_editor_editRemoveBtn');
     removeBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -82,7 +85,7 @@ function initialEditorElements() {
     });
 
     // 阻止编辑按钮冒泡
-    const editorButtons = document.getElementById('divEditorButtons');
+    const editorButtons = document.getElementById('_aiyard_editor_divEditorButtons');
     editorButtons.addEventListener('click', function (e) {
         e.stopPropagation();
     });
@@ -91,6 +94,7 @@ function initialEditorElements() {
     // 检查检查高亮元素
     if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
         const highlight = document.createElement('div');
+        highlight.id = '_aiyard_editor_highlight';
         highlight.className = 'element-highlight';
         highlight.setAttribute('data-highlight-type', 'inspect');
         highlight.style.position = 'absolute';
@@ -107,6 +111,7 @@ function initialEditorElements() {
     // 检查悬停高亮元素
     if (!document.querySelector('.element-highlight[data-highlight-type="hover"]')) {
         const hover = document.createElement('div');
+        hover.id = '_aiyard_editor_hover';
         hover.className = 'element-highlight';
         hover.setAttribute('data-highlight-type', 'hover');
         hover.style.position = 'absolute';
@@ -122,29 +127,49 @@ function initialEditorElements() {
 
     // 保存按钮
     const saveCtn = document.createElement('div');
-    saveCtn.id = 'editor-savebtn-ctn';
+    saveCtn.id = '_aiyard_editor_savebtn_ctn';
     const saveBtn = document.createElement('button');
-    saveBtn.id = 'editor-savebtn'
+    saveBtn.id = '_aiyard_editor_editor_savebtn'
     saveBtn.className = 'float-btn';
-    saveBtn.innerHTML = '🚀'; // 使用emoji作为按钮图标
+    saveBtn.innerHTML = '保存'; // 使用emoji作为按钮图标
     saveBtn.addEventListener('click', (e) => {
         handleClickOnSave(e);
     });
     saveCtn.appendChild(saveBtn);
     document.body.appendChild(saveCtn);
     window.editorVars.saveBtn = saveBtn;
+
+    // 文件选择框
+    const fileSelectorInputElement = document.createElement('input');
+    fileSelectorInputElement.type = 'file';
+    fileSelectorInputElement.setAttribute('accept', 'image/*');
+    fileSelectorInputElement.id = '_aiyard_editor_imageSelectInput';
+    fileSelectorInputElement.style.display = 'none';
+    fileSelectorInputElement.addEventListener('change', (e) => {
+        handleInputFileSelectChanged(e);
+    });
+    document.body.appendChild(fileSelectorInputElement);
+    window.editorVars.fileSelectorInputElement = fileSelectorInputElement;
 }
+
 function handleClickOnSave(event) {
     swithcToNormalMode()
-    console.log(document.body.innerHTML)
+    const clonedBody = document.body.cloneNode(true)
+    const elementsToRemove = clonedBody.querySelectorAll(`[id^="_aiyard_editor_"]`);
+    elementsToRemove.forEach(element => {
+        element.remove();
+    });
+
+    console.log(clonedBody.innerHTML);
 }
 function handleClickOnDocument(event) {
     if (currentModeType() === MODE_TYPE_INSPECTING) {
-        event.preventDefault();
-        event.stopPropagation();
         const target = event.target;
+        if (target.id !== undefined && target.id.startsWith("_aiyard_editor_")) {
+            return;
+        }
         const editableTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'li', 'td', 'th', 'button', 'a'];
-
+        // 点击的是可编辑的文字标签
         if (editableTags.includes(target.tagName.toLowerCase()) && !target.hasAttribute('contentEditable')) {
             window.editorVars.modeType = MODE_TYPE_TEXT_EDITTING;
             window.editorVars.textEdittingTargetElement = target;
@@ -152,20 +177,24 @@ function handleClickOnDocument(event) {
             target.focus();
             target.addEventListener('blur', (e) => {
                 target.removeAttribute('contentEditable');
+                swithcToNormalMode()
+                switchToInspectorMode()
             });
         }
+        // 点击的是图片
+        else if (target.tagName.toLowerCase() === 'img') {
+            window.editorVars.replaceImgElement = target;
+            window.editorVars.fileSelectorInputElement.click()
+        }
     }
-
-    // window.parent.postMessage({
-    //     "msgType": "edit",
-    //     "prototype": Object.prototype.toString.call(event.target),
-    //     "outerHTML": target.outerHTML,
-    //     "tagName": target.tagName,
-    //     "textContent": target.textContent,
-    //     "baseURI": target.baseURI
-    // }, '*');
 }
-
+function handleInputFileSelectChanged(inputEvent) {
+    const selectFile = inputEvent.target.files[0];
+    inputEvent.target.value = "";
+    uploadFile(selectFile).then((newSrc) => {
+        window.editorVars.replaceImgElement.src = newSrc;
+    })
+}
 
 export function currentModeType() {
     return window.editorVars.modeType;
@@ -219,7 +248,7 @@ function showInspector(x, y, element) {
     if (!element) {
         return;
     }
-    const inspector = document.getElementById('elementInspector');
+    const inspector = document.getElementById('_aiyard_editor_elementInspector');
     if (!inspector) {
         console.error('[ERROR] 找不到检查器元素');
         return;
@@ -293,10 +322,7 @@ function handleInspectorMouseMove(e) {
     const y = e.clientY;
     const element = document.elementFromPoint(x, y);
     // 忽略编辑器自身的元素
-    if (element && (
-        element.id === 'elementInspector' || element.id === 'editor-savebtn' ||  element.id === 'editor-savebtn-ctn' ||
-        element.classList.contains('element-highlight') ||
-        element.classList.contains('editor-button'))) {
+    if (element.id.startsWith("_aiyard_editor_") ) {
         return;
     }
     showInspector(x, y, element);
@@ -315,7 +341,7 @@ function hideInspectorHighlight() {
 // 隐藏检查器提示
 function hideInspector() {
 
-    const inspector = document.getElementById('elementInspector');
+    const inspector = document.getElementById('_aiyard_editor_elementInspector');
     if (inspector) {
         inspector.style.display = 'none';
 
@@ -333,12 +359,12 @@ function handleEditMouseMove(e) {
     const element = document.elementFromPoint(e.clientX, e.clientY);
     // 忽略我们的UI元素
     if (element && (
-        element.id === 'elementInspector' ||
-        element.id === 'divEditorButtons' ||
+        element.id === '_aiyard_editor_elementInspector' ||
+        element.id === '_aiyard_editor_divEditorButtons' ||
         element.classList.contains('element-highlight') ||
         element.classList.contains('editor-button') ||
-        element === document.getElementById('editDuplicateBtn') ||
-        element === document.getElementById('editRemoveBtn'))) {
+        element === document.getElementById('_aiyard_editor_editDuplicateBtn') ||
+        element === document.getElementById('_aiyard_editor_editRemoveBtn'))) {
 
         hideEditHoverHighlight();
         return;
@@ -395,8 +421,8 @@ function applyEditModeToDivs() {
     let appliedCount = 0;
     divs.forEach(div => {
         // 排除我们自己的元素
-        if (div.id === 'elementInspector' ||
-            div.id === 'divEditorButtons' ||
+        if (div.id === '_aiyard_editor_elementInspector' ||
+            div.id === '_aiyard_editor_divEditorButtons' ||
             div.classList.contains('element-highlight') ||
             div.classList.contains('editor-button')) {
             return;
@@ -433,12 +459,12 @@ function handleElementClick(e) {
     e.stopPropagation();
 
     // 如果点击的是编辑器元素，不做任何处理
-    if (e.target.id === 'elementInspector' ||
-        e.target.id === 'divEditorButtons' ||
+    if (e.target.id === '_aiyard_editor_elementInspector' ||
+        e.target.id === '_aiyard_editor_divEditorButtons' ||
         e.target.classList.contains('element-highlight') ||
         e.target.classList.contains('editor-button') ||
-        e.target === document.getElementById('editDuplicateBtn') ||
-        e.target === document.getElementById('editRemoveBtn')) {
+        e.target === document.getElementById('_aiyard_editor_editDuplicateBtn') ||
+        e.target === document.getElementById('_aiyard_editor_editRemoveBtn')) {
 
         return;
     }
@@ -453,7 +479,7 @@ function handleElementClick(e) {
         v.selectedElement.style.boxShadow = '';
 
         // 隐藏编辑按钮
-        const editorButtons = document.getElementById('divEditorButtons');
+        const editorButtons = document.getElementById('_aiyard_editor_divEditorButtons');
         if (editorButtons) {
             editorButtons.style.display = 'none';
         }
@@ -488,7 +514,7 @@ function showEditorButtons(element) {
 
     if (!element) return;
 
-    const buttons = document.getElementById('divEditorButtons');
+    const buttons = document.getElementById('_aiyard_editor_divEditorButtons');
     if (!buttons) {
         console.error('[ERROR] 找不到编辑按钮容器');
         return;
@@ -509,7 +535,7 @@ function showEditorButtons(element) {
 // 隐藏编辑按钮
 function hideEditorButtons() {
 
-    const buttons = document.getElementById('divEditorButtons');
+    const buttons = document.getElementById('_aiyard_editor_divEditorButtons');
     if (buttons) {
         buttons.style.display = 'none';
 

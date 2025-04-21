@@ -27,7 +27,7 @@
 }
 
 /* 元素检查器样式 */
-#elementInspector {
+#_aiyard_editor_elementInspector {
     position: fixed;
     display: none;
     z-index: 10000;
@@ -42,7 +42,7 @@
 }
 
 /* 编辑按钮容器 */
-#divEditorButtons {
+#_aiyard_editor_divEditorButtons {
     position: absolute;
     display: none;
     z-index: 10000;
@@ -50,7 +50,7 @@
 }
 
 /* 编辑按钮样式 */
-#editDuplicateBtn {
+#_aiyard_editor_editDuplicateBtn {
     padding: 0 !important;
     background-color: #34a853 !important;
     color: white !important;
@@ -67,7 +67,7 @@
     border: none !important;
 }
 
-#editRemoveBtn {
+#_aiyard_editor_editRemoveBtn {
     padding: 0 !important;
     background-color: #ea4335 !important;
     color: white !important;
@@ -91,18 +91,18 @@
     position: relative;
 }
 
-#cancelImageUpload {
+#_aiyard_editor_cancelImageUpload {
     background-color: #f2f2f2;
     color: #333;
 }
 
-#applyImageUpload {
+#_aiyard_editor_applyImageUpload {
     background-color: #4285f4;
     color: #fff;
 }
 
  /* 悬浮按钮容器样式 */
- #editor-savebtn-ctn {
+ #_aiyard_editor_savebtn_ctn {
      position: fixed;
      right: 20px;
      bottom: 20px;

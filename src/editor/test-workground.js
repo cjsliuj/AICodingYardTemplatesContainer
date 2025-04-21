@@ -11,6 +11,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
+        btn.id = '_aiyard_editor_editbtn';
         btn.innerText = 'div edit';
         btn.className = 'editor-button';
         btn.style.right = '180px';
@@ -23,6 +24,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
+        btn.id = '_aiyard_editor_inspectorbtn';
         btn.innerText = 'inspector';
         btn.className = 'editor-button';
         btn.style.right = '30px';
@@ -35,6 +37,7 @@ function addEditorButtons() {
 
     {
         const btn = document.createElement('button');
+        btn.id = '_aiyard_editor_normalbtn';
         btn.innerText = 'normal';
         btn.className = 'editor-button';
         btn.style.right = '330px';
