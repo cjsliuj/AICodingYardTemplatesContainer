@@ -21,41 +21,6 @@
 <h5>text using h5</h5>
 <h6>text using h6</h6>
 <a href="page2.html">text using a</a>
-<script>
-    var isEditMode = false;
-
-    window.addEventListener('message', (event) => {
-        const data = event.data
-        const msgType = data["msgType"]
-        if (msgType != "toggleEditMode") {
-            return
-        }
-        isEditMode = data["isEditModeOn"]
-        console.log("iframe isEditModeOn", isEditMode)
-    });
-
-    document.addEventListener('click', function(event) {
-        if (!isEditMode) {
-            return;
-        }
-        event.preventDefault();
-        const target = event.target;
-        window.parent.postMessage({
-            "msgType":"edit",
-            "prototype":Object.prototype.toString.call(event.target),
-            "outerHTML" :target.outerHTML,
-            "tagName": target.tagName,
-            "textContent" : target.textContent,
-            "baseURI":target.baseURI
-        }, '*');
-        console.log(target);
-    });
-
-    window.parent.postMessage({
-        "msgType":"requestEditMode"
-    }, '*');
-
-</script>
 
 </body>
 </html>

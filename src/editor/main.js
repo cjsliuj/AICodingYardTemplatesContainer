@@ -135,6 +135,7 @@ function initialEditorElements() {
     saveBtn.addEventListener('click', (e) => {
         handleClickOnSave(e);
     });
+    saveBtn.style.visibility = 'hidden';
     saveCtn.appendChild(saveBtn);
     document.body.appendChild(saveCtn);
     window.editorVars.saveBtn = saveBtn;
@@ -159,8 +160,16 @@ function handleClickOnSave(event) {
     elementsToRemove.forEach(element => {
         element.remove();
     });
-
-    console.log(clonedBody.innerHTML);
+    swithcToNormalMode()
+    const msg = {
+        msgType: 'save',
+        bodyInnerHTML:clonedBody.innerHTML,
+        baseURI:event.target.baseURI
+    }
+    window.parent.postMessage(msg,"*")
+    document.getElementsByTagName('body')[0].innerHTML = msg["bodyInnerHTML"];
+    console.log(clonedBody.innerHTML)
+    console.log(msg)
 }
 function handleClickOnDocument(event) {
     if (currentModeType() === MODE_TYPE_INSPECTING) {

@@ -42,7 +42,11 @@ export function uploadFile(file: File): Promise<string> {
                 },
             });
             const command = new PutObjectCommand(input);
-            await S3.send(command);
+            const rsp = await S3.send(command);
+            if (rsp == undefined){
+                reject("上传失败");
+                return;
+            }
             const newSrc = "https://"+uploadkeys.VITE_PUBLIC_DOMAIN+"/" + fname;
             resolve(newSrc);
         }
