@@ -79,21 +79,12 @@ function initEditor() {
 
     const v = window.editorVars;
     // 检查检查高亮元素
-    if (!document.querySelector('.element-highlight[data-highlight-type="inspect"]')) {
-        const highlight = document.createElement('div');
-        highlight.id = '_aiyard_editor_highlight';
-        highlight.className = 'element-highlight';
-        highlight.setAttribute('data-highlight-type', 'inspect');
-        highlight.style.position = 'absolute';
-        highlight.style.zIndex = '9999';
-        highlight.style.pointerEvents = 'none';
-        highlight.style.border = '2px solid #ea4335';
-        highlight.style.backgroundColor = 'rgba(234, 67, 53, 0.1)';
-        highlight.style.boxSizing = 'border-box';
-        highlight.style.display = 'none';
-        document.body.appendChild(highlight);
-    }
-    v.hoveredHighlightElement = document.querySelector('.element-highlight[data-highlight-type="inspect"]');
+    const highlight = document.createElement('div');
+    highlight.id = '_aiyard_editor_highlight';
+    highlight.className = 'element-highlight-div-edit-hint';
+    highlight.style.display = 'none';
+    document.body.appendChild(highlight);
+    v.hoveredHighlightElement = highlight;
 
     // 保存按钮
     const saveCtn = document.createElement('div');
@@ -319,6 +310,11 @@ function showInspector(x, y, element) {
     highlight.style.width = rect.width + 'px';
     highlight.style.height = rect.height + 'px';
     highlight.style.display = 'block';
+    if (element.tagName.toLowerCase() === 'div') {
+        highlight.className = 'element-highlight-div-edit-hint';
+    }else {
+        highlight.className = 'element-highlight-nor';
+    }
 }
 
 function hideInspector() {
@@ -387,7 +383,10 @@ function onClickedRemoveElement(event) {
     } else {
         toRemoveEle = v.divEidttingStateInfo.selectedElement;
     }
-    targetEleParent.removeChild(toRemoveEle);
+    if (toRemoveEle.parentNode) {
+        targetEleParent.removeChild(toRemoveEle);
+    }
+
 }
 
 export function currentModeType() {

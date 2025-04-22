@@ -17,7 +17,7 @@
 }
 
 /* 元素高亮样式 */
-.element-highlight {
+.element-highlight-nor {
     position: absolute;
     z-index: 9999;
     pointer-events: none;
@@ -25,7 +25,14 @@
     background-color: rgba(234, 67, 53, 0.1);
     box-sizing: border-box;
 }
-
+ .element-highlight-div-edit-hint {
+     position: absolute;
+     z-index: 9999;
+     pointer-events: none;
+     border: 2px solid #34a853;
+     background-color: #34a85310;
+     box-sizing: border-box;
+ }
 /* 元素检查器样式 */
 #_aiyard_editor_elementInspector {
     position: fixed;
