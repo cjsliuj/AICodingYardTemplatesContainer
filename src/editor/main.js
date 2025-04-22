@@ -265,13 +265,13 @@ function showInspector(x, y, element) {
 
     // 查找元素所在的最近的div
     let containingDiv = element;
-    while (containingDiv && containingDiv.tagName.toLowerCase() !== 'div' && containingDiv !== document.body) {
-        containingDiv = containingDiv.parentElement;
-    }
-
-    if (!containingDiv || containingDiv === document.body) {
-        containingDiv = element; // 如果找不到包含的div，则显示元素本身
-    }
+    // while (containingDiv && containingDiv.tagName.toLowerCase() !== 'div' && containingDiv !== document.body) {
+    //     containingDiv = containingDiv.parentElement;
+    // }
+    //
+    // if (!containingDiv || containingDiv === document.body) {
+    //     containingDiv = element; // 如果找不到包含的div，则显示元素本身
+    // }
 
     // 获取元素名称
     let info = '';
