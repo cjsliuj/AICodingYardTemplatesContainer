@@ -4,6 +4,7 @@ const MODE_TYPE_NORMAL = 0;
 const MODE_TYPE_EDIT = 1;
 const MODE_TYPE_INSPECTING = 2;
 const MODE_TYPE_TEXT_EDITTING = 3;
+const MODE_TYPE_DIV_EDITTING = 4;
 window.editorVars = {
     modeType: MODE_TYPE_NORMAL,
     // MODE_TYPE_TEXT_EDITTING only
@@ -151,6 +152,8 @@ function initialEditorElements() {
     });
     document.body.appendChild(fileSelectorInputElement);
     window.editorVars.fileSelectorInputElement = fileSelectorInputElement;
+
+    document.addEventListener('mousemove', handleInspectorMouseMove);
 }
 
 function handleClickOnSave(event) {
@@ -187,15 +190,28 @@ function handleClickOnDocument(event) {
             target.addEventListener('blur', (e) => {
                 target.removeAttribute('contentEditable');
                 swithcToNormalMode()
-                switchToInspectorMode()
+                // switchToInspectorMode()
             });
         }
         // 点击的是图片
         else if (target.tagName.toLowerCase() === 'img') {
             window.editorVars.replaceImgElement = target;
             window.editorVars.fileSelectorInputElement.click()
+        } else if (target.tagName.toLowerCase() === 'div') {
+            console.log(target);
+            handleClickOnDiv(event);
         }
     }
+}
+function handleClickOnDiv(event) {
+    const target = event.target;
+    const v = window.editorVars;
+    v.modeType = MODE_TYPE_DIV_EDITTING;
+    v.selectedElement = target;
+    v.selectedElement.style.border = '2px solid #34a853';
+    v.selectedElement.style.boxShadow = '0 0 10px rgba(52, 168, 83, 0.5)';
+    showEditorButtons(v.selectedElement);
+
 }
 function handleInputFileSelectChanged(inputEvent) {
     const selectFile = inputEvent.target.files[0];
@@ -247,7 +263,6 @@ export function switchToInspectorMode() {
     swithcToNormalMode()
 
     window.editorVars.saveBtn.style.visibility = 'visible';
-    document.addEventListener('mousemove', handleInspectorMouseMove);
     window.editorVars.modeType = MODE_TYPE_INSPECTING;
 }
 
@@ -327,14 +342,17 @@ function highlightInspectorHoverToTargetElement(targetElement) {
 
 // 处理鼠标移动事件 - 元素检查模式
 function handleInspectorMouseMove(e) {
-    const x = e.clientX;
-    const y = e.clientY;
-    const element = document.elementFromPoint(x, y);
-    // 忽略编辑器自身的元素
-    if (element.id.startsWith("_aiyard_editor_") ) {
-        return;
+    const v = window.editorVars;
+    if (v.modeType === MODE_TYPE_INSPECTING) {
+        const x = e.clientX;
+        const y = e.clientY;
+        const element = document.elementFromPoint(x, y);
+        // 忽略编辑器自身的元素
+        if (element.id.startsWith("_aiyard_editor_") ) {
+            return;
+        }
+        showInspector(x, y, element);
     }
-    showInspector(x, y, element);
 }
 
 // 隐藏高亮
